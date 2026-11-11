@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "clearAll": "Clear all",
+  "empty": "No notifications",
+  "notification": "Notification",
+  "quiet.on": "Do Not Disturb is on",
+  "quiet.off": "Do Not Disturb",
+  "group.all": "Show all",
+  "group.less": "Show less",
+  "time.now": "now",
+  "time.minutes": "%1 min ago",
+  "time.hours": "%1 h ago",
+  "agenda.today": "Today",
+  "agenda.now": "now",
+  "agenda.allDay": "all day",
+  "agenda.join": "Join",
+  "bell.quiet": "Notifications (Do Not Disturb)"
+}

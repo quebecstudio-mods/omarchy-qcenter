@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "clearAll": "Tout effacer",
+  "empty": "Aucune notification",
+  "notification": "Notification",
+  "quiet.on": "Ne pas déranger est activé",
+  "quiet.off": "Ne pas déranger",
+  "group.all": "Tout voir",
+  "group.less": "Moins",
+  "time.now": "maintenant",
+  "time.minutes": "il y a %1 min",
+  "time.hours": "il y a %1 h",
+  "agenda.today": "Aujourd'hui",
+  "agenda.now": "en cours",
+  "agenda.allDay": "journée",
+  "agenda.join": "Rejoindre",
+  "bell.quiet": "Notifications (Ne pas déranger)"
+}
