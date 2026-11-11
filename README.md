@@ -46,6 +46,9 @@ Exposé and Mission Control.
 omarchy plugin add https://github.com/quebecstudio-mods/omarchy-qcenter --enable
 ```
 
+Omarchy first shows a security notice and asks you to confirm (*Clone and add
+this plugin?*); add `--yes` to skip the question in a script.
+
 The bell lands on the right of the bar. To open the center from the keyboard,
 add a binding to `~/.config/hypr/bindings.lua`:
 

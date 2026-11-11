@@ -47,6 +47,10 @@ de notifications et son calendrier. Il va avec [qDock](https://github.com/quebec
 omarchy plugin add https://github.com/quebecstudio-mods/omarchy-qcenter --enable
 ```
 
+Omarchy affiche d'abord un avertissement de sécurité et demande de confirmer
+(*Clone and add this plugin?*) ; ajoutez `--yes` pour sauter la question dans un
+script.
+
 La cloche se place à droite de la barre. Pour ouvrir le centre au clavier,
 ajoutez un raccourci à `~/.config/hypr/bindings.lua` :
 
