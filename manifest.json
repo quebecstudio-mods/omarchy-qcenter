@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "id": "quebecstudio.qcenter",
   "name": "qCenter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Québec Studio",
   "license": "MIT",
   "homepage": "https://github.com/quebecstudio-mods/omarchy-qcenter",
-  "description": "A Mac-style notification center for Omarchy, on top of its own notifications: what you missed, Do Not Disturb, today's agenda from your calendars, and a bell for the bar.",
+  "description": "A notification center for Omarchy, on top of its own notifications: what you missed, Do Not Disturb, today's agenda from your calendars, a bell for the bar, and a settings window, in qDock's four styles.",
   "kinds": [
     "service",
     "bar-widget"

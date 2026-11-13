@@ -33,8 +33,15 @@ de notifications et son calendrier. Il va avec [qDock](https://github.com/quebec
   Fastmail ou tout lien ou fichier ICS, avec un bouton **Rejoindre** pour les
   appels Meet, Teams et Zoom.
 - **Une cloche pour la barre**, avec le nombre en attente.
-- **Deux styles.** Mac (coins arrondis, verre givré) ou Omarchy (coins du
-  thème, opaque).
+- **Les confirmations restent dehors.** Une capture enregistrée, une
+  disposition changée : Omarchy les envoie en urgence basse ; elles
+  s'affichent en bulle mais pas dans le centre. Toute app ou tout site peut
+  aussi être tenu à l'écart.
+- **Une fenêtre de réglages**, dessinée avec les contrôles d'Omarchy : le
+  style, ce que garde le centre, l'app qu'ouvre chaque site, vos calendriers.
+- **Quatre styles**, ceux de qDock : Omarchy (coins du thème, opaque),
+  Cupertino (coins arrondis, verre givré), Redmond (comme le centre de
+  notifications de Windows) et Plasma (comme celui de KDE).
 - **Anglais et français**, selon la langue d'Omarchy.
 
 | Style Omarchy | En français |
@@ -60,7 +67,7 @@ o.bind("SUPER + N", "Notification center", "omarchy-shell -q quebecstudio.qcente
 
 ### Verre givré
 
-En style Mac, le panneau est translucide. Pour le flou derrière, ajoutez cette
+En styles Cupertino, Redmond et Plasma, le panneau est translucide. Pour le flou derrière, ajoutez cette
 règle à `~/.config/hypr/hyprland.lua` :
 
 ```lua
@@ -69,26 +76,73 @@ hl.layer_rule({ match = { namespace = "^qcenter$" }, blur = true, ignore_alpha =
 
 ## Réglages
 
-Dans l'entrée de qCenter, sous `plugins`, dans `~/.config/omarchy/shell.json` :
+qCenter a une fenêtre de réglages : cliquez sur l'engrenage en haut du centre,
+ou ouvrez **Réglages de qCenter** depuis le lanceur d'apps.
+
+![La fenêtre de réglages, sur l'agenda](docs/settings.png)
+
+Pour la retrouver aussi dans le menu d'Omarchy, ajoutez cette ligne à
+`~/.config/omarchy/extensions/omarchy-menu.jsonc` :
+
+```jsonc
+"setup.qcenter": {"icon":"󰂚","label":"Réglages de qCenter","aliases":["qcenter","notifications"],"action":"omarchy-shell -q quebecstudio.qcenter settings"},
+```
+
+L'entrée du lanceur est dans le dossier `assets` du plugin :
+
+```bash
+cp ~/.config/omarchy/plugins/qcenter/assets/qcenter-settings.desktop ~/.local/share/applications/
+cp ~/.config/omarchy/plugins/qcenter/assets/logo.png ~/.local/share/icons/hicolor/256x256/apps/qcenter.png
+```
+
+Chaque réglage est gardé dans l'entrée de qCenter, sous `plugins`, dans
+`~/.config/omarchy/shell.json` (le lien **shell.json** en bas de la fenêtre
+l'ouvre) :
 
 ```json
 {
   "id": "quebecstudio.qcenter",
-  "style": "mac",
+  "style": "cupertino",
   "calendars": [
     { "name": "Travail", "color": "#7aa2f7", "url": "https://calendar.google.com/calendar/ical/…/basic.ics" },
     { "name": "Maison", "color": "#9ece6a", "url": "~/Calendriers/maison.ics" }
-  ]
+  ],
+  "webApps": { "teams.microsoft.com": "Teams Travail" }
 }
 ```
 
 | Réglage | Valeurs | Par défaut |
 | --- | --- | --- |
-| `style` | `"mac"`, `"omarchy"` | `"mac"` |
+| `style` | `"omarchy"`, `"cupertino"`, `"redmond"`, `"plasma"` (`"mac"`, le nom de la 1.0, est lu comme `"cupertino"`) | `"cupertino"` |
+| `lowUrgency` | `true` garde aussi dans le centre les notifications d'urgence basse (les confirmations) | `false` |
+| `hiddenApps` | Les apps et sites tenus hors du centre, par nom d'app ou par site : `["omasnap", "app.slack.com"]` ; `"omarchy"` désigne les messages d'Omarchy | aucun |
 | `calendars` | Une liste de `{ name, color, url }` : un lien `https://` ou `webcal://`, ou le chemin d'un fichier `.ics` | aucun |
 | `agendaFile` | Le chemin d'un JSON d'agenda que vous tenez à jour vous-même (voir plus bas) ; remplace `calendars` | aucun |
+| `webApps` | L'app à ouvrir pour les notifications d'un site, par site : `{ "site": "app" }`, l'app par son nom dans le lanceur ou son fichier `.desktop` (voir plus bas) | aucun |
 
 Sans `calendars` ni `agendaFile`, pas de section agenda.
+
+### Clic sur une notification
+
+Une notification dont la bulle est encore affichée est cliquée par Omarchy :
+c'est l'app qui l'a envoyée qui l'ouvre, un message Teams sur sa conversation.
+Une fois la bulle partie, qCenter ramène la fenêtre de l'expéditeur. Si c'est un
+site web qui l'a envoyée et qu'aucune de ses fenêtres n'est ouverte, qCenter
+ouvre l'app web installée pour ce site plutôt que le navigateur, et le
+navigateur s'il n'y en a pas.
+
+Avec plusieurs apps pour un même site (Teams sous deux profils du navigateur,
+par exemple), ou pour envoyer un site vers une app native, nommez l'app dans
+`webApps` :
+
+```json
+"webApps": {
+  "teams.microsoft.com": "Teams Travail",
+  "app.slack.com": "Slack"
+}
+```
+
+Sans ce réglage, qCenter prend la première des apps web du site, par nom.
 
 ### Calendriers
 
@@ -131,6 +185,8 @@ omarchy-shell -q quebecstudio.qcenter open
 omarchy-shell -q quebecstudio.qcenter close
 omarchy-shell quebecstudio.qcenter count        # notifications en attente
 omarchy-shell -q quebecstudio.qcenter syncAgenda   # télécharger les calendriers maintenant
+omarchy-shell -q quebecstudio.qcenter settings     # ouvrir ou fermer la fenêtre de réglages
+omarchy-shell -q quebecstudio.qcenter settingsAt agenda   # sur une section : appearance, notifications, hidden, sites, agenda, about
 ```
 
 ## Bon à savoir
@@ -162,4 +218,4 @@ MIT © Québec Studio. Le routage vers les fenêtres est adapté du service de
 notifications d'Omarchy (MIT), issu
 d'[Omapager](https://github.com/omacom/omapager) de Neil Jagdish Patel.
 
-macOS, Mission Control et Exposé sont des marques d'Apple Inc. Ce projet n'est ni affilié à Apple ni approuvé par Apple.
+macOS, Mission Control et Exposé sont des marques d'Apple Inc. ; Windows est une marque de Microsoft Corporation ; KDE et Plasma sont des marques de KDE e.V. Ce projet n'est ni affilié à ces sociétés ni approuvé par elles.

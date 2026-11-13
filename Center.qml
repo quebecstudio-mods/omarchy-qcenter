@@ -23,11 +23,26 @@ PanelWindow {
 
   property date now: new Date()
 
-  // "mac" (default): a frosted pane with round corners; "omarchy": opaque,
-  // with the theme's corners and popup border, like Omarchy's bubbles.
-  readonly property bool macStyle: !service || service.settings.style !== "omarchy"
-  readonly property int sheetRadius: macStyle ? Math.max(Style.cornerRadius, Style.space(16)) : Style.cornerRadius
-  readonly property int tileRadius: macStyle ? Style.space(12) : Style.cornerRadius
+  // The style's pane, cards and buttons. Cupertino: frosted, round corners,
+  // round buttons. Omarchy: opaque, the theme's corners and popup border, like
+  // Omarchy's bubbles. Redmond: Windows' notification center, a slightly
+  // translucent pane with small corners. Plasma: KDE's, nearly opaque, with
+  // tight corners.
+  readonly property string styleName: service ? service.style : "cupertino"
+  readonly property var look: ({
+    omarchy: { sheet: Style.cornerRadius, tile: Style.cornerRadius, pill: Style.cornerRadius, alpha: 1,
+               border: Commons.Color.popups.border },
+    cupertino: { sheet: Math.max(Style.cornerRadius, Style.space(16)), tile: Style.space(12), pill: -1, alpha: 0.9,
+                 border: Util.alpha(Commons.Color.popups.text, 0.14) },
+    redmond: { sheet: Style.space(8), tile: Style.space(6), pill: Style.space(4), alpha: 0.94,
+               border: Util.alpha(Commons.Color.popups.text, 0.1) },
+    plasma: { sheet: Style.space(5), tile: Style.space(3), pill: Style.space(3), alpha: 0.97,
+              border: Util.alpha(Commons.Color.popups.text, 0.18) }
+  })[styleName]
+  readonly property int sheetRadius: look.sheet
+  readonly property int tileRadius: look.tile
+  // -1: fully round.
+  function pillRadius(height) { return look.pill < 0 ? height / 2 : Math.min(look.pill, height / 2) }
 
   readonly property var locale: Qt.locale(String(I18n.formatLocale || "en-US").replace("-", "_"))
 
@@ -113,10 +128,16 @@ PanelWindow {
     return panel.isRedacted(row) ? I18n.t("notifications.redactedBody") : panel.plain(row.body)
   }
 
+  // The sender's icon (Omarchy keeps only bare names), else its app's in the
+  // launcher. Omarchy's own notifications take Omarchy's.
   function iconOf(row) {
-    // Omarchy keeps only bare icon names.
     var icon = String(row.appIcon || "")
-    return icon ? (Quickshell.iconPath(icon, true) || "") : ""
+    var found = icon ? Quickshell.iconPath(icon, true) : ""
+    if (found) return found
+    var app = String(row.app || "")
+    if (app === "omarchy-action" || app === "notify-send") return Quickshell.iconPath("omarchy", true) || ""
+    var entry = app ? DesktopEntries.heuristicLookup(app) : null
+    return entry && entry.icon ? (Quickshell.iconPath(String(entry.icon), true) || "") : ""
   }
 
   function plain(text) {
@@ -217,9 +238,9 @@ PanelWindow {
     height: parent.height - Style.space(10) * 2
     opacity: panel.reveal
     radius: panel.sheetRadius
-    color: panel.macStyle ? Util.alpha(Commons.Color.popups.background, 0.9) : Commons.Color.popups.background
+    color: Util.alpha(Commons.Color.popups.background, panel.look.alpha)
     border.width: Style.normalBorderWidth
-    border.color: panel.macStyle ? Util.alpha(Commons.Color.popups.text, 0.14) : Commons.Color.popups.border
+    border.color: panel.look.border
 
     // A click on the pane's empty space keeps it open.
     MouseArea { anchors.fill: parent }
@@ -252,12 +273,22 @@ PanelWindow {
             font.bold: true
           }
 
-          Pill {
+          Row {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: panel.t("clearAll")
-            visible: panel.rows.length > 0
-            onClicked: panel.service.clearAll()
+            spacing: Style.space(6)
+
+            Pill {
+              text: panel.t("clearAll")
+              visible: panel.rows.length > 0
+              onClicked: panel.service.clearAll()
+            }
+            // The settings window.
+            Pill {
+              text: "\u{f0493}"
+              width: height
+              onClicked: panel.service.openSettings("")
+            }
           }
         }
 
@@ -462,7 +493,7 @@ PanelWindow {
                 required property var modelData
                 required property int index
                 width: group.width
-                height: cardColumn.implicitHeight + Style.space(10) * 2
+                height: Math.max(cardColumn.implicitHeight, cardIcon.height) + Style.space(10) * 2
                 radius: panel.tileRadius
                 color: Util.alpha(Commons.Color.popups.text, cardMouse.containsMouse ? 0.12 : 0.07)
                 // A bubble still on screen.
@@ -503,30 +534,30 @@ PanelWindow {
                   mipmap: true
                 }
 
-                // No icon: the app's initial in a dot.
+                // No icon: a plain bell, the same for every app.
                 Rectangle {
                   visible: !cardIcon.visible
                   x: cardIcon.x
                   y: cardIcon.y
                   width: cardIcon.width
                   height: width
-                  radius: width / 2
-                  color: Util.alpha(Commons.Color.accent, 0.25)
+                  radius: panel.tileRadius
+                  color: Util.alpha(Commons.Color.popups.text, 0.08)
                   Text {
                     anchors.centerIn: parent
                     textFormat: Text.PlainText
-                    text: panel.labelOf(card.modelData).charAt(0).toUpperCase()
-                    color: Commons.Color.popups.text
+                    text: "\u{f009a}"
+                    color: Util.alpha(Commons.Color.popups.text, 0.6)
                     font.family: Style.font.family
-                    font.pixelSize: Style.font.body
-                    font.bold: true
+                    font.pixelSize: Math.round(Style.font.body * 1.2)
                   }
                 }
 
                 Column {
                   id: cardColumn
                   x: cardIcon.x + cardIcon.width + Style.space(10)
-                  y: Style.space(10)
+                  // A single line sits level with the icon's middle.
+                  y: Math.max(Style.space(10), (card.height - implicitHeight) / 2)
                   width: card.width - x - Style.space(10)
                   spacing: Style.space(2)
 
@@ -604,7 +635,7 @@ PanelWindow {
 
     width: pillText.implicitWidth + Style.space(small ? 10 : 14) * 2
     height: Style.space(small ? 22 : 28)
-    radius: height / 2
+    radius: panel.pillRadius(height)
     color: Util.alpha(Commons.Color.popups.text, pillMouse.containsMouse ? 0.16 : 0.08)
 
     Text {

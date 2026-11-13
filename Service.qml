@@ -55,6 +55,28 @@ Item {
     }
   }
 
+  readonly property string pluginDir: decodeURIComponent(Qt.resolvedUrl(".").toString().replace(/^file:\/\//, ""))
+  readonly property string userShellJson: (Quickshell.env("XDG_CONFIG_HOME") || root.home + "/.config") + "/omarchy/shell.json"
+
+  // Writes one setting to shell.json; the default removes it.
+  function setSetting(key, value, defaultValue) {
+    var json = JSON.stringify(value) === JSON.stringify(defaultValue) ? "null" : JSON.stringify(value)
+    Util.execArgv([root.pluginDir + "bin/qcenter-config", key, json])
+  }
+
+  function editSettings() {
+    Util.execArgv(["omarchy-launch-config-editor", root.userShellJson])
+  }
+
+  // The style, qDock's four: "cupertino" (the default, "mac" before 1.1), a
+  // frosted pane with round corners; "omarchy", opaque, with the theme's
+  // corners and popup border; "redmond" and "plasma", Windows' and KDE's
+  // notification centers.
+  readonly property string style: {
+    var s = root.settings.style === "mac" ? "cupertino" : root.settings.style
+    return ["omarchy", "redmond", "plasma"].indexOf(s) >= 0 ? s : "cupertino"
+  }
+
   // demoDir (undocumented) shows notifications from another folder, for
   // screenshots. Its rows are for show: clicks, Clear all and Do Not Disturb
   // never reach Omarchy, and no command from it ever runs.
@@ -127,8 +149,32 @@ Item {
              app: String(entry.app || ""), appIcon: String(entry.appIcon || ""),
              summary: String(entry.summary || ""), body: String(entry.body || ""),
              source: String(entry.source || ""), execArgv: String(entry.execArgv || ""),
-             senderPid: Number(entry.senderPid || 0), ts: Number(entry.ts || 0) }
+             senderPid: Number(entry.senderPid || 0), ts: Number(entry.ts || 0),
+             urgency: entry.urgency === undefined ? 1 : Number(entry.urgency) }
   }
+
+  // What a notification is filed under for "hiddenApps": its site, else its
+  // app's name in lower case; Omarchy's own messages are all "omarchy".
+  function appKeyOf(row) {
+    var host = Routing.canonicalHostname(row.source)
+    if (host) return host
+    var app = String(row.app || "").toLowerCase()
+    return app === "omarchy-action" || app === "notify-send" ? "omarchy" : app
+  }
+
+  // Apps and sites left out of the center (setting "hiddenApps"); their
+  // bubbles still show.
+  readonly property var hiddenApps: {
+    var list = Array.isArray(root.settings.hiddenApps) ? root.settings.hiddenApps : []
+    var out = {}
+    for (var i = 0; i < list.length; i++) out[String(list[i]).toLowerCase()] = true
+    return out
+  }
+
+  // Low-urgency notifications are confirmations (a screenshot saved, a
+  // layout changed, copied to the clipboard): their bubble says it, the
+  // center leaves them out unless "lowUrgency" is on.
+  readonly property bool keepLowUrgency: root.settings.lowUrgency === true
 
   readonly property var rows: {
     var gone = root.cleared.keys
@@ -139,8 +185,11 @@ Item {
       var ts = Number(entry && entry.ts || 0)
       if (!key || seen[key] || key.indexOf("placeholder") === 0) return
       if (ts <= before || (gone[key] !== undefined && ts <= gone[key])) return
+      var row = root.rowOf(entry, live)
+      if (root.hiddenApps[root.appKeyOf(row)]) return
+      if (row.urgency === 0 && !root.keepLowUrgency) return
       seen[key] = true
-      out.push(root.rowOf(entry, live))
+      out.push(row)
     }
     for (var i = root.liveEntries.length - 1; i >= 0; i--) take(root.liveEntries[i], true)
     for (var h = 0; h < root.historyEntries.length; h++) {
@@ -187,6 +236,19 @@ Item {
     return out
   }
 
+  // A site with no window open: the app chosen for it in "webApps", else its
+  // web app when one is installed, else the browser.
+  function openSite(host) {
+    var values = DesktopEntries.applications.values
+    var entries = []
+    for (var i = 0; i < values.length; i++)
+      entries.push({ id: values[i].id, name: values[i].name, execString: values[i].execString })
+    var id = Routing.appForHost(entries, host, root.settings.webApps)
+    var entry = id ? DesktopEntries.byId(id) : null
+    if (entry) entry.execute()
+    else Qt.openUrlExternally("https://" + host + "/")
+  }
+
   // A click. The newest bubble still on screen is clicked through Omarchy,
   // exactly as on the bubble (the sender's own action included). Otherwise:
   // Omarchy's --exec command, the sender's window, its site, or the app.
@@ -208,7 +270,7 @@ Item {
         var host = Routing.canonicalHostname(row.source)
         if (win && /^0x[0-9a-f]+$/i.test(win.address))
           Hyprland.dispatch('hl.dsp.focus({window = hl.get_window("address:' + win.address + '")})')
-        else if (host) Qt.openUrlExternally("https://" + host + "/")
+        else if (host) root.openSite(host)
         else if (row.app) Util.execArgv(["omarchy-hyprland-focus-app", row.app])
       }
     }
@@ -324,6 +386,16 @@ Item {
     strings: strings
   }
 
+  SettingsWindow {
+    id: settingsWindow
+    service: root
+  }
+
+  function openSettings(section) {
+    center.hide()
+    settingsWindow.toggle(section)
+  }
+
   ShellIpc {
     target: "quebecstudio.qcenter"
 
@@ -332,5 +404,8 @@ Item {
     function close(): void { center.hide() }
     function count(): string { return String(root.rows.length) }
     function syncAgenda(): void { root.syncAgenda() }
+    function settings(): void { root.openSettings("") }
+    function settingsAt(section: string): void { root.openSettings(section) }
+    function about(): void { root.openSettings("about") }
   }
 }

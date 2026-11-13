@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Sets one of qCenter's settings in its entry under "plugins" in shell.json.
+# A null value removes the setting.
+# Usage: qcenter-config <key> <json-value>
+
+set -euo pipefail
+
+source omarchy-shell-config
+
+(( $# == 2 )) || fail "usage: qcenter-config <key> <json-value>"
+[[ $1 =~ ^[A-Za-z][A-Za-z0-9]*$ ]] || fail "invalid setting name: $1"
+
+commit '
+  def entry: type == "object" and .id == $id;
+  def apply: if $value == null then del(.[$key]) else .[$key] = $value end;
+  .plugins = ((.plugins // []) as $list
+    | if any($list[]; entry)
+      then $list | map(if entry then apply else . end)
+      else $list + [{ id: $id } | apply]
+      end)
+' --arg id quebecstudio.qcenter --arg key "$1" --argjson value "$2"

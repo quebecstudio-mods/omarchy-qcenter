@@ -126,3 +126,29 @@ function windowForSource(windows, source) {
   }
   return mostRecent(found)
 }
+
+// The app to open for a site with no window: the one named for it in the
+// "webApps" setting ({ "teams.microsoft.com": "Teams Work" }, by name or by
+// desktop file id, any app), else a web app installed for the site (a desktop
+// entry launching it with omarchy-launch-webapp or --app=), the first by id
+// when several do. entries: [{ id, name, execString }].
+function appForHost(entries, host, chosen) {
+  var want = canonicalHostname(String(host || ""))
+  if (!want) return ""
+  var pick = chosen && typeof chosen === "object" && !Array.isArray(chosen) ? chosen[want] : undefined
+  if (typeof pick === "string" && pick) {
+    for (var c = 0; c < entries.length; c++)
+      if (String(entries[c].id) === pick || String(entries[c].name) === pick
+          || String(entries[c].id) === pick.replace(/\.desktop$/, ""))
+        return String(entries[c].id)
+  }
+  var ids = []
+  for (var i = 0; i < entries.length; i++) {
+    var exec = String(entries[i].execString || "")
+    if (exec.indexOf("omarchy-launch-webapp") < 0 && exec.indexOf("--app=") < 0) continue
+    var m = exec.match(/https:\/\/([^/?#"'\s:]+)/i)
+    if (m && canonicalHostname(m[1]) === want) ids.push(String(entries[i].id))
+  }
+  ids.sort()
+  return ids.length ? ids[0] : ""
+}

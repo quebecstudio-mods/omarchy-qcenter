@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=qCenter Settings
+Name[fr]=Réglages de qCenter
+Comment=Notification center style, apps, calendars
+Comment[fr]=Style, apps et calendriers du centre de notifications
+Keywords=notifications;qcenter;calendar;settings;
+Keywords[fr]=notifications;qcenter;calendrier;agenda;réglages;paramètres;
+Exec=omarchy-shell -q quebecstudio.qcenter settings
+Icon=qcenter
+Terminal=false
+NoDisplay=false
+Categories=Settings;
