@@ -206,11 +206,11 @@ omarchy-shell -q quebecstudio.qcenter settingsAt agenda   # sur une section : ap
   Si une future version d'Omarchy en change le format, le centre pourrait
   rester vide jusqu'à une mise à jour de qCenter.
 
-## Fonctionne avec
+## Voir aussi
 
 - [qDock](https://github.com/quebecstudio-mods/omarchy-qdock), un dock façon Mac.
-- [qExposé](https://github.com/quebecstudio-mods/omarchy-qexpose), Exposé et
-  Alt+Tab avec aperçus.
+- [qExposé](https://github.com/quebecstudio-mods/omarchy-qexpose), Exposé et Alt+Tab avec aperçus.
+- [Journal des versions](CHANGELOG.fr.md) : ce qui a changé à chaque version.
 
 ## Licence
 
