@@ -74,6 +74,21 @@ règle à `~/.config/hypr/hyprland.lua` :
 hl.layer_rule({ match = { namespace = "^qcenter$" }, blur = true, ignore_alpha = 0.2 })
 ```
 
+## Désinstallation
+
+```bash
+omarchy plugin remove quebecstudio.qcenter
+```
+
+Omarchy désactive qCenter, retire sa cloche de la barre et supprime son dossier.
+Les notifications d'Omarchy restent telles quelles. Retirez ensuite ce que vous
+avez ajouté à la main : la touche dans `~/.config/hypr/bindings.lua`, la règle
+de flou dans `~/.config/hypr/hyprland.lua` et, si vous l'avez copiée,
+`~/.local/share/applications/qcenter-settings.desktop`. Les réglages de qCenter
+restent dans son entrée sous `plugins` dans `~/.config/omarchy/shell.json`, et
+son état dans `~/.local/state/qcenter` : supprimez-les aussi pour repartir de
+zéro.
+
 ## Réglages
 
 qCenter a une fenêtre de réglages : cliquez sur l'engrenage en haut du centre,
@@ -210,6 +225,7 @@ omarchy-shell -q quebecstudio.qcenter settingsAt agenda   # sur une section : ap
 
 - [qDock](https://github.com/quebecstudio-mods/omarchy-qdock), un dock façon Mac.
 - [qExposé](https://github.com/quebecstudio-mods/omarchy-qexpose), Exposé et Alt+Tab avec aperçus.
+- [qSpot](https://github.com/quebecstudio-mods/omarchy-qspot), une recherche façon Spotlight : apps, fichiers, calculs et web.
 - [Journal des versions](CHANGELOG.fr.md) : ce qui a changé à chaque version.
 
 ## Licence
